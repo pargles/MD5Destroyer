@@ -1,0 +1,29 @@
+a biblioteca javax.mail.jar deve estar na pasta que os demais arquivos e classes.
+
+primeiro abra o arquivo MensageiroClient e sete o IP do servidor no campo abaixo:
+
+Mensageiro m = (Mensageiro) Naming.lookup( "rmi://127.0.0.1/MensageiroService" );
+
+
+-----------------------OPCIONAIS----------------------------
+na classe QuebraMD5Paralelo, no metodo heureka, voce pode habilitar as opcoes para mandar email a cada resultado obtido ou salvar os resultados no arquivo, basta descomentar as linhas:
+
+//salvarEmArquivo(iKey,hash);
+//enviarEmail(iKey,hash);
+
+para cadastrar o seu email, basta inserir no metodo enviarEmail, o seu proprio email, atraves do comando abaixo:
+
+email.adicionarDestinatario("seuemail@servidor.com");
+------------------------------------------------------------
+
+a lista de hashs a  serem descobertas deve ser inserida no arquivo md5.txt
+
+feito isso, execute o arquivo MD5Destroyer.sh, pelo terminal, atraves do comando abaixo:
+
+sh ./MD5Destroyer
+
+com o servidor inicializado, execute o cliente, por OUTRO terminal, atraves do comando abaixo:
+
+sh ./MD5DestroyerClient
+
+o script fara um loop infinito chamando o MensageiroClient, assim que ele descobre uma senha, o loco volta para o inicio e o cliente e chamado novamente para descobrir outra senha
