@@ -1,6 +1,9 @@
 #!/bin/bash
 javac -cp javax.mail.jar *.java
-for i in {1..60}#cada PC pode executar ate 60 vezes
+#cada PC pode executar ate 60 vezes
+max=50
+for i in `seq 1 $max`
 do
-  java -classpath .:javax.mail.jar ClienteMD5Destroyer >> "log.txt"
+    echo "$i"
+    java ClienteMD5Destroyer >> "logCli.txt"
 done

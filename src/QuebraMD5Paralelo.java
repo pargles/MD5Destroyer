@@ -1,14 +1,10 @@
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.rmi.RemoteException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
@@ -16,48 +12,49 @@ import java.util.logging.Logger;
 
  /**
  * @author pargles
+ * @author eduardo
  * classe que faz todos os calculos e tambem
  * e paralela extendo a classe Thread
  */ 
 public class QuebraMD5Paralelo extends Thread {
-    private  final String completeDigits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*()_-+=[]{}?/\\|><";
-    private  final String basicDigits = "0123456789abcdefghijklmnopqrstuvwxyz";
+    private  final String alfabeto;
     private  String hashAtual;
+    private BufferedReader data;
+    private int letrasASeremCalculadas;
     private  int inicio;
-    private  int porcao;
-    private int iniComplete;
-    private int porcaoComplete;
-    private FileWriter fw;
-    private File arquivo;
-    private BufferedWriter bw;
-    private ResultadoPorEmail email;
-    private long tempoInicio = System.currentTimeMillis();
+    private int fim;
+    private MD5Destroyer servidor;
     
-    public QuebraMD5Paralelo(String hash) {
-        hashAtual = hash;
-    }
-      
-    public QuebraMD5Paralelo(String hash,int ini,int slice,int ini2,int slice2) throws IOException {
-        hashAtual = hash;
-        inicio = ini;
-        porcao = slice;
-        iniComplete=ini2;
-        porcaoComplete=slice2;     
+    public QuebraMD5Paralelo(String[] hash, MD5Destroyer server) {
+        hashAtual = hash[0];
+        letrasASeremCalculadas = Integer.parseInt(hash[1]);
+        alfabeto = hash[4];
+        char ini = hash[2].charAt(0);
+        char end = hash[3].charAt(0);
+        inicio = alfabeto.indexOf(ini);
+        fim = alfabeto.indexOf(end);
+        servidor = server;
+        data=null;
     }
     
     @Override
     public void run() {
         try{
-            boolean todosDigitos= false;
-            md5Cracker4Letras(hashAtual,inicio,porcao,basicDigits.length(),todosDigitos);
-            md5Cracker5Letras(hashAtual,inicio,porcao,basicDigits.length(),todosDigitos);
-            //md5Cracker6Letras(hashAtual,inicio,porcao,basicDigits.length(),todosDigitos);
-            todosDigitos = true;//comeca da metade, nao repete os que ja foram
-            System.out.println("verificando simbolos especiais");
-            md5Cracker4Letras(hashAtual,iniComplete,porcaoComplete,completeDigits.length(),todosDigitos);
-            md5Cracker5Letras(hashAtual,iniComplete,porcaoComplete,completeDigits.length(),todosDigitos);
-            //md5Cracker6Letras(hashAtual,iniComplete,porcaoComplete,completeDigits.length(),todosDigitos);
-            
+            switch( letrasASeremCalculadas)
+            {
+                case 4:
+                    md5Cracker4Letras(hashAtual,inicio,fim,alfabeto.length());
+                    //System.out.println(getStringTempo(System.currentTimeMillis() - tempoInicio));
+                    break;
+                case 5:
+                    md5Cracker5Letras(hashAtual,inicio,fim,alfabeto.length());
+                    //System.out.println(getStringTempo(System.currentTimeMillis() - tempoInicio));
+                    break;
+                case 6:
+                    md5Cracker6Letras(hashAtual,inicio,fim,alfabeto.length());
+                    //System.out.println(getStringTempo(System.currentTimeMillis() - tempoInicio));
+                    break;
+            }           
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(QuebraMD5Paralelo.class.getName()).log(Level.SEVERE, null, ex);
         } catch (UnsupportedEncodingException ex) {
@@ -70,86 +67,72 @@ public class QuebraMD5Paralelo extends Thread {
         
 
     }
-    private void heureka(final String iKey,final String hash) throws NoSuchAlgorithmException, IOException {
+    private void heureka(String iKey,String hash) throws NoSuchAlgorithmException, IOException {
         /*if ((s = md5Cracker(hash, iKey, iKey))!= null){*/
-        long tempo = (System.currentTimeMillis() - tempoInicio);  
+        servidor.encontreiResultado(hash,iKey);
         
-        long segundos = tempo / 1000;  
-        //System.out.println(segundos);
-        long minutos = segundos / 60; 
-        long horas = minutos / 60;
-        minutos = horas>=1? minutos-horas*60:minutos;//se ja foi mais de uma hora (60 min) tenho q descontar dos minutos, 
-        segundos = minutos>=1?segundos-minutos*60:segundos;//se ja foi mais de um minuto (60s) tenho que descontar dos segundos
-        String t = "em: "+horas+" horas e "+minutos+" minutos e "+segundos+" segundos";
         System.out.println("EBA, ENCONTROU: " + iKey);
-        salvarEmArquivo(iKey,hash,t);
-        enviarEmail(iKey,hash,t);
+        if(data!=null)data.close();
         System.exit(0);
         //}
     }
     
-    public void md5Cracker4Letras(String hash, int inicio, int parte,int fim,boolean todosDigitos) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {
+    public void md5Cracker4Letras(String hash, int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {       
         StringBuffer sb = new StringBuffer();
-        int ini2 = todosDigitos?36:0;//37 e onde comeca o ABCDEF....
-        for (int i = inicio; i < parte; i++) {
-            for (int j = 0; j < fim; j++) {
-                for (int k = 0; k < fim; k++) {
-                    for (int l = ini2; l < fim; l++) {
-                        sb.delete(0, sb.length());
-                        sb.append(completeDigits.charAt(i));
-                        sb.append(completeDigits.charAt(j));
-                        sb.append(completeDigits.charAt(k));
-                        sb.append(completeDigits.charAt(l));
-                        verificaSolucao(sb,hash);
-                    }
-                    ini2=0;//agora pode repetir as letras
-                }
-            }
-        }
-    }
-    
-    public void md5Cracker5Letras(String hash, int inicio, int parte,int fim,boolean todosDigitos) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {
-        StringBuffer sb = new StringBuffer();
-        int ini2 = todosDigitos?36:0;//37 e onde comeca o ABCDEF....
         for (int i = inicio; i < parte; i++) {
             for (int j = 0; j < fim; j++) {
                 for (int k = 0; k < fim; k++) {
                     for (int l = 0; l < fim; l++) {
-                        for (int m = ini2; m < fim; m++) {
-                            sb.delete(0, sb.length());
-                            sb.append(completeDigits.charAt(i));
-                            sb.append(completeDigits.charAt(j));
-                            sb.append(completeDigits.charAt(k));
-                            sb.append(completeDigits.charAt(l));
-                            sb.append(completeDigits.charAt(m));
-                            verificaSolucao(sb,hash);
-                        }
-                        ini2=0;//agora pode repetir as letras
+                        sb.delete(0, sb.length());
+                        sb.append(alfabeto.charAt(i));
+                        sb.append(alfabeto.charAt(j));
+                        sb.append(alfabeto.charAt(k));
+                        sb.append(alfabeto.charAt(l));
+                        verificaSolucao(sb,hash);
                     }
                 }
             }
         }
     }
     
-    public void md5Cracker6Letras(String hash, int inicio, int parte,int fim,boolean todosDigitos) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {
+    public void md5Cracker5Letras(String hash, int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {
         StringBuffer sb = new StringBuffer();
-        int ini2 = todosDigitos?36:0;//37 e onde comeca o ABCDEF....
         for (int i = inicio; i < parte; i++) {
             for (int j = 0; j < fim; j++) {
                 for (int k = 0; k < fim; k++) {
                     for (int l = 0; l < fim; l++) {
                         for (int m = 0; m < fim; m++) {
-                            for (int n = ini2; n < fim; n++) {
+                            sb.delete(0, sb.length());
+                            sb.append(alfabeto.charAt(i));
+                            sb.append(alfabeto.charAt(j));
+                            sb.append(alfabeto.charAt(k));
+                            sb.append(alfabeto.charAt(l));
+                            sb.append(alfabeto.charAt(m));
+                            verificaSolucao(sb,hash);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    public void md5Cracker6Letras(String hash, int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {      
+        StringBuffer sb = new StringBuffer();
+        for (int i = inicio; i < parte; i++) {
+            for (int j = 0; j < fim; j++) {
+                for (int k = 0; k < fim; k++) {
+                    for (int l = 0; l < fim; l++) {
+                        for (int m = 0; m < fim; m++) {
+                            for (int n = 0; n < fim; n++) {
                                 sb.delete(0, sb.length());
-                                sb.append(completeDigits.charAt(i));
-                                sb.append(completeDigits.charAt(j));
-                                sb.append(completeDigits.charAt(k));
-                                sb.append(completeDigits.charAt(l));
-                                sb.append(completeDigits.charAt(m));
-                                sb.append(completeDigits.charAt(n));
+                                sb.append(alfabeto.charAt(i));
+                                sb.append(alfabeto.charAt(j));
+                                sb.append(alfabeto.charAt(k));
+                                sb.append(alfabeto.charAt(l));
+                                sb.append(alfabeto.charAt(m));
+                                sb.append(alfabeto.charAt(n));
                                 verificaSolucao(sb, hash);
                             }
-                            ini2=0;//agora pode repetir as letras
                         }
                     }
                 }
@@ -164,7 +147,7 @@ public class QuebraMD5Paralelo extends Thread {
         temp = cryptWithMD5(result.toString());
         if (temp.equals(hash)) {
             heureka(result,hash);//should return iKey for part of liar detection
-        } else {
+        }else {
             //bw.write(result);
             //bw.newLine();
             //bw.flush();
@@ -191,22 +174,15 @@ public class QuebraMD5Paralelo extends Thread {
         return digest;
     }
 
-    private void salvarEmArquivo(String resultado, String hash,String tempo) throws IOException {
-        arquivo = new File("resultados.txt");
-        fw = new FileWriter(arquivo,true); 
-        bw = new BufferedWriter(fw);
-        bw.write(hash+" = "+resultado+" "+tempo);
-        bw.newLine();
-        bw.flush();
-        bw.close();
-    }
-
-    private void enviarEmail(String resultado,String hash,String tempo) {
-        email = new ResultadoPorEmail();
-        email.adicionarDestinatario("pargles1@gmail.com");
-        email.adicionarDestinatario("enicola90@gmail.com");
-        email.setAssunto("MD5Destroyer, Email automatico ");
-        email.setTexto("EBA! mais uma hash descoberta\n\n"+hash+" = "+resultado+"\n\n"+tempo);
-        email.mandarEmail();
+    public void md5Dictionary() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
+        System.out.println("avaliando dicionario de palavras");
+        StringBuffer sb = new StringBuffer();
+        String line;
+        data = new BufferedReader(new InputStreamReader(new FileInputStream("dicionario.txt")));
+        while ((line = data.readLine()) != null) {
+            verificaSolucao(sb.append(line), hashAtual);
+            sb.delete(0, sb.length());
+        }
+        data.close();
     }
 }

@@ -1,56 +1,53 @@
+import java.net.InetAddress;
 import java.rmi.Naming;  
 import java.rmi.RemoteException;  
 import java.rmi.NotBoundException;  
 import java.net.MalformedURLException;  
-  
+  /*
+   * http://www.codelord.net/2011/06/18/statistics-of-62k-passwords/
+   * http://www.schneier.com/blog/archives/2006/12/realworld_passw.html
+   */
 public class ClienteMD5Destroyer { 
     private static QuebraMD5Paralelo md5parallel;
-    private static String hashAtual;
+    private static String[] hashAtual;
     private static int processadores;
-    private static int escalonador[][];
-    private static final String basicDigits = "0123456789abcdefghijklmnopqrstuvwxyz";
-    private  static final String completeDigits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*()_-+=[]{}?/\\|><";
-    private static int sliceSize;
-    private static int sliceSizeCompleteDig;
-    
-    public static void escalonarTarefas() {
-        sliceSize = basicDigits.length() / processadores;
-        
-        escalonador[0][0]=0;//primeira tarefa inicia na posicao 0
-        int proximo = sliceSize;
-        for (int i = 1; i < processadores; i++) {
-            escalonador[i][0] = proximo;
-            proximo+=sliceSize;
-        }
-        
-        sliceSizeCompleteDig = completeDigits.length() / processadores;      
-        escalonador[0][1]=0;//primeira tarefa inicia na posicao 0
-        proximo = sliceSizeCompleteDig;
-        for (int i = 1; i < processadores; i++) {
-            escalonador[i][1] = proximo;
-            proximo+=sliceSizeCompleteDig;
-        }
-        //System.out.println(basicDigits.length());
-    }
-
+    private static String computerName;
+    private static String usuario;
     
    public static void main( String args[] ) throws RemoteException, NotBoundException {  
         try {  
-            MD5Destroyer m = (MD5Destroyer) Naming.lookup( "rmi://177.201.157.147:1099/MensageiroService" ); 
-            hashAtual = m.queroTrabalho();
-            if(hashAtual==null)
+            MD5Destroyer m = (MD5Destroyer) Naming.lookup( "rmi://localhost:1099/MensageiroService" ); 
+            try {
+                computerName = InetAddress.getLocalHost().getHostName();
+                usuario = System.getProperty("user.name");
+                System.out.println("pc: "+computerName +" user: "+usuario);
+                
+            } catch (Exception e) {
+                System.out.println("Exception caught =" + e.getMessage());
+            }
+            if(!m.temTrabalho())
             {
                 System.err.println("nao tem mais trabalho");
                 System.exit(1);
             }
-            processadores =Runtime.getRuntime().availableProcessors();
-            escalonador = new int[processadores][2];
+            processadores = Runtime.getRuntime().availableProcessors();
             System.out.println("voce tem "+processadores+" processadores disponiveis");
-            escalonarTarefas();
-            System.out.println("trabalhando em: " + hashAtual);  
-            for (int i = 0; i < escalonador.length; i++) {
-                md5parallel = new QuebraMD5Paralelo(hashAtual,escalonador[i][0],escalonador[i][0]+sliceSize,escalonador[i][1],escalonador[i][1]+sliceSizeCompleteDig);//instancia o objeto paralelo passando a hash e a quantidade de letra
+            hashAtual = m.queroTrabalho(computerName);
+            if (hashAtual != null) {
+                md5parallel = new QuebraMD5Paralelo(hashAtual, m);
+                md5parallel.md5Dictionary();//primeiro tenta sequencial utilizando o dicionario
+                md5parallel.join();
+                md5parallel = new QuebraMD5Paralelo(hashAtual, m);//se nao achou no dicionario pega a mesma letra e tenta forca bruta
                 md5parallel.start();
+            }
+            for (int i = 0; i < processadores-1; i++) {
+                hashAtual = m.queroTrabalho(computerName);
+                if(hashAtual!=null)
+                {
+                    md5parallel = new QuebraMD5Paralelo(hashAtual,m);//instancia o objeto paralelo passando a hash e a quantidade de letra
+                    md5parallel.start();  
+                }
+                
             }
             //m.enviarMensagem( "terminei!" );  
         }  
@@ -74,5 +71,5 @@ public class ClienteMD5Destroyer {
             System.out.println( "Exception: " + e.toString() );
             System.exit(1);
         }  
-    } 
+    }
 }
