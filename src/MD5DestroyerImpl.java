@@ -96,7 +96,13 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         tempS[2] = Character.toString(tempC[0]);//letra inicial
         tempS[3] = Character.toString(tempC[1]);//letra final
         tempS[4] = completeDigits;//este e o alfabeto
-        System.out.println(computer + " esta trabalhando na hash " + tempS[0] + " na letra " + tempC[0]);
+        String message = computer + " esta trabalhando na hash " + tempS[0] + " na letra " + tempC[0];
+        try {
+            salvarEmArquivo(message,"","","log.txt");
+        } catch (IOException ex) {
+            Logger.getLogger(MD5DestroyerImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.out.println(message);
         return tempS;//retorna a hash para alguma maquina trabalhar e incrementa o indicie para a proxima maquina
     }
 
@@ -194,7 +200,7 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         result[1]=resultado;
         resultados.add(result);
         try {
-            salvarEmArquivo(resultado, hash, t);
+            salvarEmArquivo(resultado, hash, t,"resultado.txt");
         } catch (IOException ex) {
             Logger.getLogger(MD5DestroyerImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -203,6 +209,11 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         System.out.println("RESULTADO: " + hash + " = " + resultado);
         System.out.println(hashes.size() + " hashs restantes");
         System.out.println("----------------------------------------");
+        try {
+            salvarEmArquivo(  hash+" = "+resultado , "---------------------------------------\nRESULTADO: ",hashes.size() + " hashs restantes\n---------------------------------------","log.txt");
+        } catch (IOException ex) {
+            Logger.getLogger(MD5DestroyerImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if(totalHashs==resultados.size())//ja encontrou todos os resultados
         {
             String listaResultado = resultados.size()+" hashs quebradas\n\n";
@@ -235,8 +246,8 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
      * @param String resultado, String hash, String tempo
      * @return void
      */
-    private void salvarEmArquivo(String resultado, String hash, String tempo) throws IOException {
-        arquivo = new File("resultados.txt");
+    private void salvarEmArquivo(String resultado, String hash, String tempo,String nomeArq) throws IOException {
+        arquivo = new File(nomeArq);
         fw = new FileWriter(arquivo, true);
         bw = new BufferedWriter(fw);
         bw.write(hash + " = " + resultado + " " + tempo);
@@ -261,10 +272,8 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         email.mandarEmail();
     }
     
-    /* metodo que envia um email contendo o resultado encontrado
-     * como se trata de um processamento distruido em diferentes computadores
-     * torna-se necessaria o envio de informacao utilizando este meio
-     * @param String resultado, String hash, String tempo
+    /*
+     * @param String mensagem
      * @return void
      */
     private void enviarEmail(String mensagem) {
@@ -272,6 +281,7 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         for (int i = 0; i < emails.size(); i++) {
             email.adicionarDestinatario(emails.get(i));
         }
+        email.setAssunto("MD5Destroyer, Email automatico ");
         email.setTexto(mensagem);
         email.mandarEmail();
     }
