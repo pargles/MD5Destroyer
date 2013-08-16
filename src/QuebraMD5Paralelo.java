@@ -76,8 +76,6 @@ public class QuebraMD5Paralelo extends Thread {
         servidor.encontreiResultado(hash,iKey);
         
         System.out.println("EBA, ENCONTROU: " + iKey);
-        //System.exit(0);
-        //}
     }
     
     public void md5Cracker4Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {       

@@ -46,10 +46,10 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         resultados = new ArrayList<String[]>();
         hashs = new TreeMap();
         emails = new ArrayList<String>();
-        emails.add("adenauer@inf.ufpel.edu.br");
+        //emails.add("adenauer@inf.ufpel.edu.br");
         emails.add("pargles1@gmail.com");
-        emails.add("enicola90@gmail.com");
-        emails.add("smmgoncalves@inf.ufpel.edu.br");
+        //emails.add("enicola90@gmail.com");
+        //emails.add("smmgoncalves@inf.ufpel.edu.br");
         tempoInicio = System.currentTimeMillis();
         escalonar();
         carregarListaDoArquivo("md5.txt");
@@ -125,14 +125,13 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         }
     }
 
-    /* se a lista de hashs nao estiver vazia e o escalonador tambem 
-     * nao estiver vazio, entao, ainda tem trabalho
+    /* se a lista de hashs nao estiver vazia entao, ainda tem trabalho
      * @param void
      * @return boolena temTrabalho
      */
     @Override
     public boolean temTrabalho() throws RemoteException {
-        boolean vazio = hashs.isEmpty();
+        boolean vazio = hashs.isEmpty()||escalonador.isEmpty();
         return !vazio;
     }
 
@@ -158,7 +157,8 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         
         //enviarEmail(resultado, hash, t);
         System.out.println("----------------------------------------");
-        System.out.println("RESULTADO: " + hash + " = " + resultado+"em: "+t);
+        System.out.println("RESULTADO: " + hash + " = " + resultado+" "+t);
+        System.out.println(hashs.size()+ " hashs restantes");
         System.out.println("----------------------------------------");
         try {
             salvarEmArquivo(  hash+" = "+resultado , "---------------------------------------\nRESULTADO: ","\n---------------------------------------","log.txt");
