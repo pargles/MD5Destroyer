@@ -9,49 +9,52 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * @author pargles 
+ * @see http://reusablesec.blogspot.ca/2009/05/character-frequency-analysis-info.html
+ * @see http://www.skullsecurity.org/wiki/index.php/Passwords
+ * @see http://www.mat.uc.pt/~pedro/lectivos/CodigosCriptografia1011/interTIC07pqap.pdf
+ * @see 
  * classe que faz a implemtacao de todos os metodos da interface
  * Mensageiro.java
  */
 public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5Destroyer {
 
-    private ArrayList<String[]> hashes;
     private ArrayList<String[]> resultados;
-    private String nomeArquivo = "md5.txt";
-    private String completeDigits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%&*()_-+=[]{}?/\\|><^";//o ultimo caracter serve apenas como indicador do fim
+    private TreeMap hashs;
+    private String completeDigits = "([{<\\-+!/s1mDpCaPbAcStEdMrNlTIfQhFkOjn2ei0oBg@#$%&*=?|_3456789URGHJKLquvwxyzVWXYZ]})>^";//o ultimo caracter serve apenas como indicador do fim
     private ArrayList<char[]> escalonador;
     private ArrayList<String> emails;
-    private String[] hashAtual;
     private long tempoInicio;
-    private long inicioServidorRodando;
     private FileWriter fw;
     private File arquivo;
     private BufferedWriter bw;
     private ResultadoPorEmail email;
-    private int maxLetras,minLetras;
-    private int totalHashs;
     /*
      * metodo construtor da classe, apenas inicia o Array de hashes
      * e le as hashes do arquivo ou da propria memoria
      */
-    public MD5DestroyerImpl() throws RemoteException, FileNotFoundException, IOException {
+    public MD5DestroyerImpl() throws RemoteException, FileNotFoundException, IOException, NoSuchAlgorithmException {
         super();
         escalonador = new ArrayList<char[]>();
-        hashes = new ArrayList<String[]>();
         resultados = new ArrayList<String[]>();
+        hashs = new TreeMap();
         emails = new ArrayList<String>();
-        maxLetras = 6;
-        minLetras = 4;
+        emails.add("adenauer@inf.ufpel.edu.br");
         emails.add("pargles1@gmail.com");
-        //emails.add("enicola90@gmail.com");
-        //emails.add("adenauer@inf.ufpel.edu.br");
-        inicioServidorRodando = System.currentTimeMillis();
-        carregarListaDoArquivo(nomeArquivo);
+        emails.add("enicola90@gmail.com");
+        emails.add("smmgoncalves@inf.ufpel.edu.br");
+        tempoInicio = System.currentTimeMillis();
+        escalonar();
+        carregarListaDoArquivo("md5.txt");
+        
+        //enviarEmail("teste", "teste", "teste");
     }
 
     /* metodo que retorna um hash quando o cliente chama esse metodo
@@ -60,43 +63,16 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
      */
     @Override
     public String[] queroTrabalho(String computer) {
-        if (escalonador.isEmpty()) {
-            if (!hashes.isEmpty()) {
-                escalonar();//se nao tem trabalho no escalonador e a lista de hash nao esta fazia
-                hashAtual = hashes.remove(0);//entao remove uma hash e aplica o escalonamento a cima
-                tempoInicio = System.currentTimeMillis();//comeceu o processamento de uma hash
-                return darTrabalho(computer);
-            } else {
-                return null;//caso nao tenha mais hashs a serem descobertas
-            }
-        } else {
-            return darTrabalho(computer);//se tem trabalho no escalonador, entao envia o trabalho direto
-        }
-    }
-
-    /* metodo que retorna uma string de 5 posicoes contendo trabalho para o nodo
-     * str[0]= hash
-     * str[1]= quantidade de letras a serem calculadas (4,5 ou 6)
-     * str[2]= letra inicial
-     * str[3]= letra final
-     * str[4]= alfabeto
-     * @param String nome do computador
-     * @return vetor de String com os dados a serem calculados
-     */
-    public String[] darTrabalho(String computer) {
         char tempC[];
-        String[] tempS = new String[5];
+        String[] tempS = new String[4];
         tempC = escalonador.remove(0);//sempre pega a primeira letra
         //tirou o ultimo, quer dizer que chegou no fim e nguem encontrou o resultado  
-        if (escalonador.isEmpty()) {
-            devolverTrabalho();
-        }
-        tempS[0] = hashAtual[0];//hash
-        tempS[1] = hashAtual[1];//quantidade de letras a ser avaliadas
-        tempS[2] = Character.toString(tempC[0]);//letra inicial
-        tempS[3] = Character.toString(tempC[1]);//letra final
-        tempS[4] = completeDigits;//este e o alfabeto
-        String message = computer + " esta trabalhando na hash " + tempS[0] + " na letra " + tempC[0];
+        
+        tempS[0] = Character.toString(tempC[2]);//quantidade de letras a ser avaliadas
+        tempS[1] = Character.toString(tempC[0]);//letra inicial
+        tempS[2] = Character.toString(tempC[1]);//letra final
+        tempS[3] = completeDigits;//este e o alfabeto
+        String message = computer + " esta trabalhando na letra " + tempC[0]+" com "+tempC[2]+" letras";
         try {
             salvarEmArquivo(message,"","","log.txt");
         } catch (IOException ex) {
@@ -104,6 +80,7 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         }
         System.out.println(message);
         return tempS;//retorna a hash para alguma maquina trabalhar e incrementa o indicie para a proxima maquina
+        
     }
 
     @Override
@@ -115,41 +92,7 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
     public String lerMensagem() throws RemoteException {
         return "This is not a Hello World! message";
     }
-    /* metodo que carrega todas as hash de um arquiivo chamado "md5.txt"
-     * @param void
-     * @return String nome do arquivo
-     */
-    public void carregarListaDoArquivo(String nomeArquivo) throws FileNotFoundException, IOException {
-        System.out.println("carregando hashs");
-        String line;
-        BufferedReader data = new BufferedReader(new InputStreamReader(new FileInputStream(nomeArquivo)));
-        while ((line = data.readLine()) != null) {
-            String[] temp = new String[2];
-            temp[0] = line;// a hash que leu
-            temp[1] = "4";//comeca tentando com 4 letras
-            System.out.println(line);
-            hashes.add(temp);
-        }
-        totalHashs = hashes.size();
-        System.out.println(hashes.size() + " hashes carregadas, servidor pronto!");
-        data.close();
-    }
 
-    /* primeiro sao calculadas as hashs com 4 letras, uma hash com 4 letras nao foi
-     * encontrada ela volta para o final da lista e passara a ser de 5 letras e assim sucessivamente
-     * para 6 letras
-     * @param void
-     * @return void
-     */
-    public void devolverTrabalho() {
-        String[] temp = new String[2];
-        temp[0] = hashAtual[0];
-        int palavras = Integer.parseInt(hashAtual[1]) + 1;
-        palavras = palavras>maxLetras?minLetras:palavras;//se tiver mais letras que o permitido, volta para o inicio da computacao
-        temp[1] = String.valueOf(palavras);//se tinha testado com 4 letras, o proximo PC que pegar a hash vai testa com 5 letras
-        System.out.println("hash: " + temp[0] + " devolvida, com " + temp[1] + " letras");
-        hashes.add(temp);//coloca o novo trabalho no final da lista
-    }
 
     /* metodo que divide a tarefa entre os computadores
      * ele bota num vetor de char qual a letra inicial que 
@@ -160,9 +103,24 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
      */
     public void escalonar() {
         for (int i = 0; i < completeDigits.length() - 1; i++) {
-            char[] temp = new char[2];
+            char[] temp = new char[3];
             temp[0] = completeDigits.charAt(i);//letra inicial
             temp[1] = completeDigits.charAt(i + 1);//letra final
+            temp[2] = '4';
+            escalonador.add(temp);
+        }
+        for (int i = 0; i < completeDigits.length() - 1; i++) {
+            char[] temp = new char[3];
+            temp[0] = completeDigits.charAt(i);//letra inicial
+            temp[1] = completeDigits.charAt(i + 1);//letra final
+            temp[2] = '5';
+            escalonador.add(temp);
+        }
+        for (int i = 0; i < completeDigits.length() - 1; i++) {
+            char[] temp = new char[3];
+            temp[0] = completeDigits.charAt(i);//letra inicial
+            temp[1] = completeDigits.charAt(i + 1);//letra final
+            temp[2] = '6';
             escalonador.add(temp);
         }
     }
@@ -174,7 +132,7 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
      */
     @Override
     public boolean temTrabalho() throws RemoteException {
-        boolean vazio = hashes.isEmpty() && escalonador.isEmpty();
+        boolean vazio = hashs.isEmpty();
         return !vazio;
     }
 
@@ -187,42 +145,36 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
     public void encontreiResultado(String hash, String resultado) throws RemoteException {
         long tempo = (System.currentTimeMillis() - tempoInicio);
         String t = getStringTempo(tempo);
-        for (int i = hashes.size() - 1; i >= 0; i--) {
-                if (hash.equals(hashes.get(i)[0])) {
-                    hashes.remove(i);
-                }
-        }
-        if (hash.equals(hashAtual[0])) {
-            escalonador = new ArrayList<char[]>();//o equivalente a dar um removeAll no escalonador
-        }
         String result[] = new String[2];
         result[0]=hash;
         result[1]=resultado;
         resultados.add(result);
+        hashs.remove(hash);
         try {
             salvarEmArquivo(resultado, hash, t,"resultado.txt");
-        } catch (IOException ex) {
+       } catch (IOException ex) {
             Logger.getLogger(MD5DestroyerImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
-        enviarEmail(resultado, hash, t);
+        
+        //enviarEmail(resultado, hash, t);
         System.out.println("----------------------------------------");
-        System.out.println("RESULTADO: " + hash + " = " + resultado);
-        System.out.println(hashes.size() + " hashs restantes");
+        System.out.println("RESULTADO: " + hash + " = " + resultado+"em: "+t);
         System.out.println("----------------------------------------");
         try {
-            salvarEmArquivo(  hash+" = "+resultado , "---------------------------------------\nRESULTADO: ",hashes.size() + " hashs restantes\n---------------------------------------","log.txt");
+            salvarEmArquivo(  hash+" = "+resultado , "---------------------------------------\nRESULTADO: ","\n---------------------------------------","log.txt");
         } catch (IOException ex) {
             Logger.getLogger(MD5DestroyerImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if(totalHashs==resultados.size())//ja encontrou todos os resultados
+        if(!temTrabalho())//ja encontrou todos os resultados
         {
             String listaResultado = resultados.size()+" hashs quebradas\n\n";
             for(int i=0;i<resultados.size();i++)
             {
                 listaResultado= listaResultado+resultados.get(i)[0]+" = "+resultados.get(i)[1]+"\n";
             }
-            listaResultado = listaResultado+"\n\n"+getStringTempo(System.currentTimeMillis()-inicioServidorRodando);
+            listaResultado = listaResultado+"\n\n"+getStringTempo(System.currentTimeMillis()-tempoInicio);
             enviarEmail(listaResultado);
+            System.exit(1);
         }
     }
 
@@ -284,5 +236,20 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         email.setAssunto("MD5Destroyer, Email automatico ");
         email.setTexto(mensagem);
         email.mandarEmail();
+    }
+    
+    /* metodo que carrega todas as hash de um arquiivo chamado "md5.txt"
+     * @param void
+     * @return String nome do arquivo
+     */
+    public void carregarListaDoArquivo(String nomeArquivo) throws FileNotFoundException, IOException, NoSuchAlgorithmException {
+        System.out.println("carregando hashs");
+        String line;
+        BufferedReader data = new BufferedReader(new InputStreamReader(new FileInputStream(nomeArquivo)));
+        while ((line = data.readLine()) != null) {
+            hashs.put(line, "");
+        }
+        System.out.println(hashs.size() + " hashes carregadas,");
+        data.close();
     }
 }

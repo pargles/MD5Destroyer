@@ -9,7 +9,7 @@ import java.net.MalformedURLException;
    */
 public class ClienteMD5Destroyer { 
     private static QuebraMD5Paralelo md5parallel;
-    private static String[] hashAtual;
+    private static String[] letraAtual;
     private static int processadores;
     private static String computerName;
     private static String usuario;
@@ -32,19 +32,11 @@ public class ClienteMD5Destroyer {
             }
             processadores = Runtime.getRuntime().availableProcessors();
             System.out.println("voce tem "+processadores+" processadores disponiveis");
-            hashAtual = m.queroTrabalho(computerName);
-            if (hashAtual != null) {
-                md5parallel = new QuebraMD5Paralelo(hashAtual, m);
-                md5parallel.md5Dictionary();//primeiro tenta sequencial utilizando o dicionario
-                md5parallel.join();
-                md5parallel = new QuebraMD5Paralelo(hashAtual, m);//se nao achou no dicionario pega a mesma letra e tenta forca bruta
-                md5parallel.start();
-            }
-            for (int i = 0; i < processadores-1; i++) {
-                hashAtual = m.queroTrabalho(computerName);
-                if(hashAtual!=null)
+            for (int i = 0; i < processadores; i++) {
+                letraAtual = m.queroTrabalho(computerName);
+                if(letraAtual!=null)
                 {
-                    md5parallel = new QuebraMD5Paralelo(hashAtual,m);//instancia o objeto paralelo passando a hash e a quantidade de letra
+                    md5parallel = new QuebraMD5Paralelo(letraAtual,m);//instancia o objeto paralelo passando a hash e a quantidade de letra
                     md5parallel.start();  
                 }
                 
