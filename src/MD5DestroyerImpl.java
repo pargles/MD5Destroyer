@@ -28,7 +28,7 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
 
     private ArrayList<String[]> resultados;
     private TreeMap hashs;
-    private String completeDigits = "([{<\\-+!/s1mDpCaPbAcStEdMrNlTIfQhFkOjn2ei0oBg@#$%&*=?|_3456789URGHJKLquvwxyzVWXYZ]})>^";//o ultimo caracter serve apenas como indicador do fim
+    private String completeDigits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%&*()_-+=[]{}?/\\|><^";//o ultimo caracter serve apenas como indicador do fim
     private ArrayList<char[]> escalonador;
     private ArrayList<String> emails;
     private long tempoInicio;
@@ -102,26 +102,20 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
      * @return void
      */
     public void escalonar() {
-        for (int i = 0; i < completeDigits.length() - 1; i++) {
-            char[] temp = new char[3];
-            temp[0] = completeDigits.charAt(i);//letra inicial
-            temp[1] = completeDigits.charAt(i + 1);//letra final
-            temp[2] = '4';
-            escalonador.add(temp);
-        }
-        for (int i = 0; i < completeDigits.length() - 1; i++) {
-            char[] temp = new char[3];
-            temp[0] = completeDigits.charAt(i);//letra inicial
-            temp[1] = completeDigits.charAt(i + 1);//letra final
-            temp[2] = '5';
-            escalonador.add(temp);
-        }
-        for (int i = 0; i < completeDigits.length() - 1; i++) {
-            char[] temp = new char[3];
-            temp[0] = completeDigits.charAt(i);//letra inicial
-            temp[1] = completeDigits.charAt(i + 1);//letra final
-            temp[2] = '6';
-            escalonador.add(temp);
+        char[] temp;
+        //temp = new char[3];
+        //temp[0] = completeDigits.charAt(0);//letra inicial
+        //temp[1] = completeDigits.charAt(completeDigits.length()-1);//letra final
+        //temp[2] = '4';//o primeiro nucleo vai receber toda computacao dos quadtro digitos
+        //escalonador.add(temp);
+        for (int j = 4; j <= 6; j++) {
+            for (int i = 0; i < completeDigits.length() - 1; i++) {
+                temp = new char[3];
+                temp[0] = completeDigits.charAt(i);//letra inicial
+                temp[1] = completeDigits.charAt(i + 1);//letra final
+                temp[2] = (char) ('0' + j);
+                escalonador.add(temp);
+            }
         }
     }
 
@@ -141,12 +135,13 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
      * @return void
      */
     @Override
-    public void encontreiResultado(String hash, String resultado) throws RemoteException {
+    public synchronized void encontreiResultado(String hash, String resultado) throws RemoteException {
         long tempo = (System.currentTimeMillis() - tempoInicio);
         String t = getStringTempo(tempo);
-        String result[] = new String[2];
+        String result[] = new String[3];
         result[0]=hash;
         result[1]=resultado;
+        result[2]= t;
         resultados.add(result);
         hashs.remove(hash);
         try {
@@ -155,7 +150,7 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
             Logger.getLogger(MD5DestroyerImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        //enviarEmail(resultado, hash, t);
+        enviarEmail(resultado, hash, t);
         System.out.println("----------------------------------------");
         System.out.println("RESULTADO: " + hash + " = " + resultado+" "+t);
         System.out.println(hashs.size()+ " hashs restantes");
@@ -165,12 +160,12 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         } catch (IOException ex) {
             Logger.getLogger(MD5DestroyerImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if(!temTrabalho())//ja encontrou todos os resultados
+        if(hashs.isEmpty())//ja encontrou todos os resultados
         {
             String listaResultado = resultados.size()+" hashs quebradas\n\n";
             for(int i=0;i<resultados.size();i++)
             {
-                listaResultado= listaResultado+resultados.get(i)[0]+" = "+resultados.get(i)[1]+"\n";
+                listaResultado= listaResultado+resultados.get(i)[0]+" = "+resultados.get(i)[1]+"  "+resultados.get(i)[2]+"\n";
             }
             listaResultado = listaResultado+"\n\n"+getStringTempo(System.currentTimeMillis()-tempoInicio);
             enviarEmail(listaResultado);

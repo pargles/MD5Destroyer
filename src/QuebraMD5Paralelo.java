@@ -67,18 +67,21 @@ public class QuebraMD5Paralelo extends Thread {
             Logger.getLogger(QuebraMD5Paralelo.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(QuebraMD5Paralelo.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(QuebraMD5Paralelo.class.getName()).log(Level.SEVERE, null, ex);
         }
         
 
     }
-    private synchronized void  heureka(String iKey,String hash) throws NoSuchAlgorithmException, IOException {
+    private void  heureka(String iKey,String hash) throws NoSuchAlgorithmException, IOException, InterruptedException {
         /*if ((s = md5Cracker(hash, iKey, iKey))!= null){*/
+        //Thread.sleep(2000);//espera dois segundos para nao estourar o numeros de threads para mandar email para o cliente
         servidor.encontreiResultado(hash,iKey);
         
         System.out.println("EBA, ENCONTROU: " + iKey);
     }
     
-    public void md5Cracker4Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {       
+    public void md5Cracker4Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException, InterruptedException {       
         StringBuffer sb = new StringBuffer();
         for (int i = inicio; i < parte; i++) {
             for (int j = 0; j < fim; j++) {
@@ -96,7 +99,7 @@ public class QuebraMD5Paralelo extends Thread {
         }
     }
     
-    public void md5Cracker5Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {
+    public void md5Cracker5Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException, InterruptedException {
         StringBuffer sb = new StringBuffer();
         for (int i = inicio; i < parte; i++) {
             for (int j = 0; j < fim; j++) {
@@ -117,7 +120,7 @@ public class QuebraMD5Paralelo extends Thread {
         }
     }
     
-    public void md5Cracker6Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException {      
+    public void md5Cracker6Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException, InterruptedException {      
         StringBuffer sb = new StringBuffer();
         for (int i = inicio; i < parte; i++) {
             for (int j = 0; j < fim; j++) {
@@ -141,7 +144,7 @@ public class QuebraMD5Paralelo extends Thread {
         }
     }
     
-    public void verificaSolucao(StringBuffer sb) throws NoSuchAlgorithmException, FileNotFoundException, IOException{ 
+    public void verificaSolucao(StringBuffer sb) throws NoSuchAlgorithmException, FileNotFoundException, IOException, InterruptedException{ 
         String temp = cryptWithMD5(sb.toString());
         if(tree.containsKey(temp))
         {
