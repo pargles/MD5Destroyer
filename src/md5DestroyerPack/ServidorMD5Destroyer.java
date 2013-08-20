@@ -1,12 +1,21 @@
+package md5DestroyerPack;
+
 import java.rmi.Naming;  
-  
+
+/**
+ * Servidor que disponibiliza as hashes para os clientes quebrarem
+ * @autor Pargles
+ * @author Eduardo
+ * @author Stephano
+ */
+
 public class ServidorMD5Destroyer {
     //private static  String hash;
   
     public ServidorMD5Destroyer() {  
         try {  
             MD5Destroyer m = new MD5DestroyerImpl();  
-            Naming.rebind("rmi://localhost:1099/MensageiroService", m);
+            Naming.rebind("rmi://localhost:1099/MensageiroService", m); // associa m a porta 1099
             //m.setHash(hash);
         }  
         catch( Exception e ) {  

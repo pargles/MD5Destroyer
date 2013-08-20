@@ -1,7 +1,15 @@
+package md5DestroyerPack;
+
 import javax.mail.*;
 import javax.mail.internet.*;
 import java.util.*;
 
+/**
+ * Classe responsável por enviar por email os resultados da quebra de hashs
+ * @author Pargles
+ * @author Eduardo
+ * @author Stephano
+ */
 public class ResultadoPorEmail
 {
     private Properties props;
@@ -43,6 +51,9 @@ public class ResultadoPorEmail
         destinatario.add(email);
     }
     
+    /**
+     * Envia email informando que mais uam hash foi descoberta
+     */
     public void mandarEmail() {
         try {
             Authenticator auth = new SMTPAuthenticator();

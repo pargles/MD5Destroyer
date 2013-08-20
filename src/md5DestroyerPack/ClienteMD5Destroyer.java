@@ -1,3 +1,5 @@
+package md5DestroyerPack;
+
 import java.net.InetAddress;
 import java.rmi.Naming;  
 import java.rmi.RemoteException;  
@@ -7,6 +9,13 @@ import java.net.MalformedURLException;
    * http://www.codelord.net/2011/06/18/statistics-of-62k-passwords/
    * http://www.schneier.com/blog/archives/2006/12/realworld_passw.html
    */
+
+/**
+ * Classe cliente que solicita hashs de um servidor e tenta quebrá-las
+ * @author Pargles
+ * @author Eduardo
+ * @author Stephano
+ */
 public class ClienteMD5Destroyer { 
     private static QuebraMD5Paralelo md5parallel;
     private static String[] letraAtual;

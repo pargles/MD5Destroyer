@@ -1,3 +1,5 @@
+package md5DestroyerPack;
+
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -17,11 +19,13 @@ import java.util.logging.Logger;
 
 /**
  * @author pargles 
+ * author Eduardo 
+ * author Stephano 
  * @see http://reusablesec.blogspot.ca/2009/05/character-frequency-analysis-info.html
  * @see http://www.skullsecurity.org/wiki/index.php/Passwords
  * @see http://www.mat.uc.pt/~pedro/lectivos/CodigosCriptografia1011/interTIC07pqap.pdf
  * @see 
- * classe que faz a implemtacao de todos os metodos da interface
+ * Faz a implemtacao de todos os metodos da interface
  * Mensageiro.java
  */
 public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5Destroyer {
@@ -36,9 +40,13 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
     private File arquivo;
     private BufferedWriter bw;
     private ResultadoPorEmail email;
-    /*
-     * metodo construtor da classe, apenas inicia o Array de hashes
-     * e le as hashes do arquivo ou da propria memoria
+    
+    /**
+     * Inicia o Array de hashes e le as hashes do arquivo ou da propria memoria
+     * @throws RemoteException
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException 
      */
     public MD5DestroyerImpl() throws RemoteException, FileNotFoundException, IOException, NoSuchAlgorithmException {
         super();
@@ -57,8 +65,9 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         //enviarEmail("teste", "teste", "teste");
     }
 
-    /* metodo que retorna um hash quando o cliente chama esse metodo
-     * @param void
+    /**
+     * Retorna a próxima hash disponível do escalonador
+     * @param computer
      * @return String hash ou null caso nao tiver mais hashes para serem calculadas
      */
     @Override
@@ -94,12 +103,11 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
     }
 
 
-    /* metodo que divide a tarefa entre os computadores
-     * ele bota num vetor de char qual a letra inicial que 
+    /** Divide a tarefa entre os computadores.
+     * Coloac em um vetor de char qual a letra inicial que 
      * um computador tera de calcular e seus calculos vao ate
      * uma letra final que tambem e inserida no vetor
      * @param void
-     * @return void
      */
     public void escalonar() {
         char[] temp;
@@ -108,20 +116,20 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         //temp[1] = completeDigits.charAt(completeDigits.length()-1);//letra final
         //temp[2] = '4';//o primeiro nucleo vai receber toda computacao dos quadtro digitos
         //escalonador.add(temp);
-        for (int j = 4; j <= 6; j++) {
+        for (int j = 4; j <= 6; j++) {  //j representa o numero de letras da senha
             for (int i = 0; i < completeDigits.length() - 1; i++) {
                 temp = new char[3];
                 temp[0] = completeDigits.charAt(i);//letra inicial
                 temp[1] = completeDigits.charAt(i + 1);//letra final
-                temp[2] = (char) ('0' + j);
+                temp[2] = (char) ('0' + j); // numero de letras da senha (4,5 ou 6)
                 escalonador.add(temp);
             }
         }
     }
 
-    /* se a lista de hashs nao estiver vazia entao, ainda tem trabalho
+    /**
      * @param void
-     * @return boolena temTrabalho
+     * @return true, se a lista de hash não estiver vazia, false caso contrário
      */
     @Override
     public boolean temTrabalho() throws RemoteException {
@@ -129,10 +137,12 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         return !vazio;
     }
 
-    /* metodo que recebe uma mensagem do nodo indicando que encontrou o resultado
-     * metodo responsavel por salvar o resultado em arquivo e tambem por enviar por email
-     * @param String hash atual e String resultado
-     * @return void
+    /**
+     * Recebe uma mensagem do nodo indicando que encontrou o resultado.
+     * Responsavel por salvar o resultado em arquivo e tambem por enviar por email
+     * @param hash 
+     * @param resultado
+     * @throws RemoteException 
      */
     @Override
     public synchronized void encontreiResultado(String hash, String resultado) throws RemoteException {
@@ -173,9 +183,10 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         }
     }
 
-    /* metodo que recebe o tempo que foi necessario para calcular a hash
-     * e devolve o tempo em formato de string contendo horas, minutos e segundos necessarios
-     * @param long tempo necesario
+    /**
+     *  Recebe o tempo que foi necessario para calcular a hash
+     * e devolve o tempo em formato de string contendo horas, minutos e segundos
+     * @param tempo tempo que foi necesario para quebrar a hash
      * @return String tempo formatado
      */
     private String getStringTempo(long tempo) {
@@ -189,9 +200,13 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         return "em: " + horas + " hora"+h+ " e " + minutos + " minuto"+m+" e " + segundos + " segundos";
     }
 
-    /* metodo que salva o resultado no arquivo "resultados.txt"
-     * @param String resultado, String hash, String tempo
-     * @return void
+    /**
+     * Salva o resultado no arquivo "resultados.txt"
+     * @param resultado
+     * @param hash
+     * @param tempo
+     * @param nomeArq
+     * @throws IOException 
      */
     private void salvarEmArquivo(String resultado, String hash, String tempo,String nomeArq) throws IOException {
         arquivo = new File(nomeArq);
@@ -203,11 +218,13 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         bw.close();
     }
 
-    /* metodo que envia um email contendo o resultado encontrado
-     * como se trata de um processamento distruido em diferentes computadores
-     * torna-se necessaria o envio de informacao utilizando este meio
-     * @param String resultado, String hash, String tempo
-     * @return void
+    /**
+     * Envia um email contendo o resultado encontrado.
+     * Como se trata de um processamento distruido em diferentes computadores
+     * torna-se necessario o envio de informacao utilizando este meio
+     * @param resultado
+     * @param hash
+     * @param tempo 
      */
     private void enviarEmail(String resultado, String hash, String tempo) {
         email = new ResultadoPorEmail();
@@ -219,9 +236,9 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         email.mandarEmail();
     }
     
-    /*
-     * @param String mensagem
-     * @return void
+    /**
+     * Envia mensagem por email
+     * @param mensagem
      */
     private void enviarEmail(String mensagem) {
         email = new ResultadoPorEmail();
@@ -233,9 +250,9 @@ public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5De
         email.mandarEmail();
     }
     
-    /* metodo que carrega todas as hash de um arquiivo chamado "md5.txt"
-     * @param void
-     * @return String nome do arquivo
+    /**
+     * Carrega todas as hash de um arquiivo chamado "md5.txt"
+     * @param nomeArquivo
      */
     public void carregarListaDoArquivo(String nomeArquivo) throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         System.out.println("carregando hashs");

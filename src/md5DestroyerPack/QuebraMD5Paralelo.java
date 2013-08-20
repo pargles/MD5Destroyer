@@ -1,3 +1,5 @@
+package md5DestroyerPack;
+
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -16,8 +18,8 @@ import java.util.logging.Logger;
  * @author pargles
  * @author eduardo
  * @author stephano
- * classe que faz todos os calculos e tambem
- * e paralela extendo a classe Thread
+ * Realiza a quebra de senhas de forma paralalela
+ * 
  */ 
 public class QuebraMD5Paralelo extends Thread {
     private  final String alfabeto;
@@ -28,6 +30,15 @@ public class QuebraMD5Paralelo extends Thread {
     private MD5Destroyer servidor;
     private TreeMap tree;
     
+    /**
+     * 
+     * Recebe o servidor para poder informá-lo quando uma hash é descoberta.
+     * @param hash  vetor de strings que contém as informações necessárias sobre as hashes
+     * @param server
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException 
+     */
     public QuebraMD5Paralelo(String[] hash, MD5Destroyer server) throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         tree = new TreeMap();
         letrasASeremCalculadas = Integer.parseInt(hash[0]);
@@ -42,6 +53,9 @@ public class QuebraMD5Paralelo extends Thread {
     }
     
     @Override
+    /**
+     * Executa o processo de quebra de senha. Chama o quebrador de senahs de 4,5 ou 6 letras
+     */
     public void run() {
         try{
             switch( letrasASeremCalculadas)
@@ -80,7 +94,19 @@ public class QuebraMD5Paralelo extends Thread {
         
         System.out.println("EBA, ENCONTROU: " + iKey);
     }
-    
+    /**
+     * Quebrador de senhas de 4 letras. Varre todas as possibilidades de senhas dentro de uma faixa de letras. A faixa é
+     * referente a primeira letra da senha e varia de inicio a parte. inicio e parte são índices de caracteres do alfabeto.
+     * @param inicio    indice, no alfabeto de caracteres, do primeiro caracter da senha a ser usada nas conbinações
+     * @param parte indice do ultimo caracter a ser testado como primeiro caracter da senha
+     * @param fim   indice do ultimo caracter do alfabeto a ser usado a partir do segundo caracter das senhas
+     * @throws java.security.NoSuchAlgorithmException
+     * @throws UnsupportedEncodingException
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws InterruptedException 
+     * 
+     */
     public void md5Cracker4Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException, InterruptedException {       
         StringBuffer sb = new StringBuffer();
         for (int i = inicio; i < parte; i++) {
@@ -99,6 +125,18 @@ public class QuebraMD5Paralelo extends Thread {
         }
     }
     
+    /**
+     * Quebrador de senhas de 5 letras. Varre todas as possibilidades de senhas dentro de uma faixa de letras. A faixa é
+     * referente a primeira letra da senha e varia de inicio a parte. inicio e parte são índices de caracteres do alfabeto.
+     * @param inicio    indice, no alfabeto de caracteres, do primeiro caracter da senha a ser usada nas conbinações
+     * @param parte indice do ultimo caracter a ser testado como primeiro caracter da senha
+     * @param fim   indice do ultimo caracter do alfabeto a ser usado a partir do segundo caracter das senhas
+     * @throws java.security.NoSuchAlgorithmException
+     * @throws UnsupportedEncodingException
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws InterruptedException 
+     */
     public void md5Cracker5Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException, InterruptedException {
         StringBuffer sb = new StringBuffer();
         for (int i = inicio; i < parte; i++) {
@@ -119,7 +157,18 @@ public class QuebraMD5Paralelo extends Thread {
             }
         }
     }
-    
+    /**
+     * Quebrador de senhas de 4 letras. Varre todas as possibilidades de senhas dentro de uma faixa de letras. A faixa é
+     * referente a primeira letra da senha e varia de inicio a parte.
+     * @param inicio    indice, no alfabeto de caracteres, do primeiro caracter da senha a ser usada nas conbinações
+     * @param parte indice do ultimo caracter a ser testado como primeiro caracter da senha
+     * @param fim   indice do ultimo caracter do alfabeto a ser usado a partir do segundo caracter das senhas
+     * @throws java.security.NoSuchAlgorithmException
+     * @throws UnsupportedEncodingException
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws InterruptedException 
+     */
     public void md5Cracker6Letras(int inicio, int parte,int fim) throws java.security.NoSuchAlgorithmException, UnsupportedEncodingException, FileNotFoundException, IOException, InterruptedException {      
         StringBuffer sb = new StringBuffer();
         for (int i = inicio; i < parte; i++) {
@@ -143,7 +192,14 @@ public class QuebraMD5Paralelo extends Thread {
             }
         }
     }
-    
+    /**
+     * Verifica se a hash correspondente a senha sb faz parte do conjunto de hashs a serem quebradas
+     * @param sb senha
+     * @throws NoSuchAlgorithmException
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws InterruptedException 
+     */
     public void verificaSolucao(StringBuffer sb) throws NoSuchAlgorithmException, FileNotFoundException, IOException, InterruptedException{ 
         String temp = cryptWithMD5(sb.toString());
         if(tree.containsKey(temp))
@@ -171,9 +227,12 @@ public class QuebraMD5Paralelo extends Thread {
         return digest;
     }
     
-     /* metodo que carrega todas as hash de um arquiivo chamado "md5.txt"
-     * @param void
-     * @return String nome do arquivo
+    /**
+     * Carrega todas as hash de um arquiivo chamado "md5.txt"
+     * @param nomeArquivo
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException 
      */
     public void carregarListaDoArquivo(String nomeArquivo) throws FileNotFoundException, IOException, NoSuchAlgorithmException {
         System.out.println("carregando hashs");
