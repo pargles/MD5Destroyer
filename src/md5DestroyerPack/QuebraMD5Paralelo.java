@@ -15,10 +15,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
  /**
+ * Realiza a quebra de senhas de forma paralalela
  * @author pargles
  * @author eduardo
  * @author stephano
- * Realiza a quebra de senhas de forma paralalela
  * 
  */ 
 public class QuebraMD5Paralelo extends Thread {
