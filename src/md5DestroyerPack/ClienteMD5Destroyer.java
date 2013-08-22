@@ -11,7 +11,7 @@ import java.net.MalformedURLException;
    */
 
 /**
- * Classe cliente que solicita hashs de um servidor e tenta quebrá-las
+ * Classe cliente que solicita do servidor a letra inicial da senha para tentar quebrar alguma hash
  * @author Pargles
  * @author Eduardo
  * @author Stephano

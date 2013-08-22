@@ -97,7 +97,7 @@ public class QuebraMD5Paralelo extends Thread {
     /**
      * Quebrador de senhas de 4 letras. Varre todas as possibilidades de senhas dentro de uma faixa de letras. A faixa é
      * referente a primeira letra da senha e varia de inicio a parte. inicio e parte são índices de caracteres do alfabeto.
-     * @param inicio    indice, no alfabeto de caracteres, do primeiro caracter da senha a ser usada nas conbinações
+     * @param inicio    Utilizndice, no alfabeto de caracteres, do primeiro caracter da senha a ser usada nas conbinações
      * @param parte indice do ultimo caracter a ser testado como primeiro caracter da senha
      * @param fim   indice do ultimo caracter do alfabeto a ser usado a partir do segundo caracter das senhas
      * @throws java.security.NoSuchAlgorithmException

@@ -21,11 +21,10 @@ import java.util.logging.Logger;
  * @author pargles 
  * author Eduardo 
  * author Stephano 
+ * Implementa o escalonador
  * @see http://reusablesec.blogspot.ca/2009/05/character-frequency-analysis-info.html
  * @see http://www.skullsecurity.org/wiki/index.php/Passwords
  * @see http://www.mat.uc.pt/~pedro/lectivos/CodigosCriptografia1011/interTIC07pqap.pdf
- * @see 
- * Faz a implemtacao de todos os metodos da interface
  * Mensageiro.java
  */
 public final class MD5DestroyerImpl extends UnicastRemoteObject implements MD5Destroyer {
